@@ -1,4 +1,4 @@
-import os, json, requests, re
+import os, json, re, requests
 from flask import Flask
 from threading import Thread
 import telebot
@@ -9,13 +9,11 @@ bot = telebot.TeleBot(TOKEN, skip_pending=True)
 app = Flask(__name__)
 
 @app.route('/')
-def home():
-    return "Bot V8 Full Commands Running"
+def home(): return "Bot V8 Full Commands Running"
 
 def run_flask():
     app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 10000)))
 
-# هاي القائمة الي بالصورة
 try:
     bot.set_my_commands([
         BotCommand("start", "❤️ تشغيل البوت"),
@@ -32,123 +30,114 @@ try:
         BotCommand("listcase", "عرض كل القضايا"),
         BotCommand("clear", "مسح الكل"),
     ])
-except:
-    pass
+except: pass
 
-FILE = "watched_cases.json"
-watched_users, cases = {}, {}
+FILE="watched_cases.json"
+watched_users,cases={},{}
 if os.path.exists(FILE):
     try:
-        with open(FILE, "r", encoding="utf-8") as f:
-            j = json.load(f)
-            watched_users = {int(k): v for k, v in j.get("users", {}).items()}
-            cases = j.get("cases", {})
-    except:
-        pass
+        with open(FILE,"r",encoding="utf-8") as f:
+            j=json.load(f)
+            watched_users={int(k):v for k,v in j.get("users",{}).items()}
+            cases=j.get("cases",{})
+    except: pass
 
 def save():
-    with open(FILE, "w", encoding="utf-8") as f:
-        json.dump({"users": watched_users, "cases": cases}, f, ensure_ascii=False, indent=2)
+    with open(FILE,"w",encoding="utf-8") as f:
+        json.dump({"users":watched_users,"cases":cases},f,ensure_ascii=False,indent=2)
 
-BANINFO = """📋🔥 انواع الباند بالتفصيل:
-
-1️⃣ فيك اكاونت 3X - 80% يرجع ✅
-2️⃣ نيو اكاونت 2X - 75% يرجع ⚠️ (creating new accounts)
-3️⃣ الاباحي 10X - 10% فقط 💀
-4️⃣ الفراود 3X - 80% يرجع 💰
-5️⃣ اطفال 100X - 1% صعب جدا 😭
-6️⃣ السبام 1X-4X - 80% اسهل باند ✅
-"""
+BANINFO="""📋🔥 انواع الباند:
+1️⃣ فيك اكاونت 3X - 80% ✅
+2️⃣ نيو اكاونت 2X - 75% ⚠️
+3️⃣ الاباحي 10X - 10% 💀
+4️⃣ الفراود 3X - 80% 💰
+5️⃣ اطفال 100X - 1% 😭
+6️⃣ السبام 1X-4X - 80% ✅"""
 
 def extract_ban(text):
-    low = text.lower()
+    low=text.lower()
     if "new accounts" in low or "creating another" in low or "avoiding" in low or "bypass" in low:
-        return "🔵 نيو اكاونت 2X - 75% يرجع ⚠️ (تجاوز الحظر بحساب جديد)"
-    elif "pretend to be" in low or "impersonation" in low or "impersonating" in low:
-        return "🟣 فيك اكاونت 3X - 80% يرجع ✅"
-    elif "under 13" in low:
-        return "👶 اطفال 100X - 1% 😭"
-    elif "sexual" in low or "nudity" in low:
-        return "🔞 اباحي 10X - 10% 💀"
-    elif "fraud" in low:
-        return "💰 فراود 3X - 80%"
-    elif "spam" in low:
-        return "📨 سبام 1X-4X - 80% ✅"
+        return "integrity_new","🔵 نيو اكاونت 2X - انشاء حسابات لتجاوز الحظر - 75% يرجع ⚠️"
     else:
-        return "🟣 فيك اكاونت 3X - 80% ✅"
+        return "integrity_fake","🟣 فيك اكاونت 3X - انتحال - 80% يرجع ✅"
 
 @bot.message_handler(commands=['start'])
-def start(m):
-    bot.reply_to(m, f"❤️ هلا بالبوت الاسطوري V8 محمد صباح\n\n{BANINFO}")
+def s(m): bot.reply_to(m,f"❤️ هلا بالبوت الاسطوري V8\n\n{BANINFO}\n\nدز صورة تعطيل!")
 
 @bot.message_handler(commands=['baninfo'])
-def baninfo(m):
-    bot.reply_to(m, BANINFO)
+def bi(m): bot.reply_to(m,BANINFO)
 
 @bot.message_handler(commands=['ipbypass'])
-def ipbypass(m):
-    bot.reply_to(m, "📱 فك حظر IP للاندرويد:\n1- وضع طيران 10 ثواني\n2- مسح بيانات انستا\n3- شغل WARP 1.1.1.1\n4- VPN Proton\n5- اطعن من متصفح خفي")
+def ip(m): bot.reply_to(m,"📱 فك حظر IP:\n1- وضع طيران 10ث\n2- مسح بيانات انستا\n3- شغل WARP 1.1.1.1\n4- Proton VPN")
 
 @bot.message_handler(commands=['pending'])
-def pending(m):
-    bot.reply_to(m, "Hello Instagram Support Team,\nMy account @[username] was disabled by mistake. Please review manually.\nUsername: @[username]\nThank you")
+def pe(m): bot.reply_to(m,"Hello Instagram Team, My account @[يوزرك] disabled by mistake. Please review. Username: @[يوزرك] Thanks")
 
 @bot.message_handler(commands=['verifytip'])
-def verifytip(m):
-    bot.reply_to(m, "✅ طريقة التوثيق المجاني MAX:\nوثق حساب جديد بنفس ايميل المعطل فئة MAX مجاني وتعال ارجعلك المعطل ❤️")
+def ve(m): bot.reply_to(m,"✅ وثق حساب جديد بنفس ايميل المعطل فئة MAX مجاني وارجع المعطل ❤️")
 
 @bot.message_handler(commands=['list'])
-def lst(m):
-    users = watched_users.get(m.chat.id, [])
-    if users:
-        bot.reply_to(m, "📋 اليوزرات:\n" + "\n".join([f"@{u}" for u in users]))
-    else:
-        bot.reply_to(m, "القائمة فارغة")
+def li(m):
+    u=watched_users.get(m.chat.id,[])
+    bot.reply_to(m,"\n".join([f"@{x}" for x in u]) if u else "القائمة فارغة")
 
 @bot.message_handler(commands=['add'])
-def add_u(m):
+def ad(m):
     try:
-        u = m.text.split()[1].replace("@","").lower()
-        watched_users.setdefault(m.chat.id, [])
-        if u not in watched_users[m.chat.id]:
-            watched_users[m.chat.id].append(u)
-            save()
-        bot.reply_to(m, f"✅ ضفت @{u}")
-    except:
-        bot.reply_to(m, "استخدم: /add @يوزر")
+        u=m.text.split()[1].replace("@","").lower()
+        watched_users.setdefault(m.chat.id,[])
+        if u not in watched_users[m.chat.id]: watched_users[m.chat.id].append(u); save()
+        bot.reply_to(m,f"✅ ضفت @{u}")
+    except: bot.reply_to(m,"/add @يوزر")
 
 @bot.message_handler(commands=['remove'])
 def rem(m):
     try:
-        u = m.text.split()[1].replace("@","").lower()
-        if u in watched_users.get(m.chat.id, []):
-            watched_users[m.chat.id].remove(u)
-            save()
-            bot.reply_to(m, f"✅ حذفت @{u}")
-        else:
-            bot.reply_to(m, f"@{u} مو موجود")
-    except:
-        bot.reply_to(m, "استخدم: /remove @يوزر")
+        u=m.text.split()[1].replace("@","").lower()
+        if u in watched_users.get(m.chat.id,[]): watched_users[m.chat.id].remove(u); save()
+        bot.reply_to(m,f"✅ حذفت @{u}")
+    except: bot.reply_to(m,"/remove @يوزر")
 
 @bot.message_handler(commands=['check'])
-def chk(m):
+def ch(m):
     try:
-        u = m.text.split()[1].replace("@","").lower()
-        headers = {"User-Agent":"Mozilla/5.0","X-IG-App-ID":"936619743392459"}
-        r = requests.get(f"https://www.instagram.com/api/v1/users/web_profile_info/?username={u}", headers=headers, timeout=10)
-        if r.status_code==200 and len(r.text)>500:
-            bot.reply_to(m, f"🟢 @{u} رجع! 🎉 مبروك")
-        else:
-            bot.reply_to(m, f"🔴 @{u} لسه معطل")
-    except Exception as e:
-        bot.reply_to(m, f"❓ ما كدرت افحص: {e}")
+        u=m.text.split()[1].replace("@","").lower()
+        h={"User-Agent":"Mozilla/5.0","X-IG-App-ID":"936619743392459"}
+        r=requests.get(f"https://www.instagram.com/api/v1/users/web_profile_info/?username={u}",headers=h,timeout=10)
+        bot.reply_to(m,f"🟢 @{u} رجع!" if r.status_code==200 and len(r.text)>500 else f"🔴 @{u} لسه")
+    except: bot.reply_to(m,"❓ ما كدرت افحص")
 
 @bot.message_handler(commands=['addcase'])
-def addcase(m):
+def ac(m):
+    try: cases[m.text.split()[1]]={"chat_id":m.chat.id}; save(); bot.reply_to(m,"✅ ضفت القضية")
+    except: bot.reply_to(m,"/addcase رقم")
+
+@bot.message_handler(commands=['checkcase','listcase'])
+def lc(m):
+    uc=[k for k,v in cases.items() if v.get("chat_id")==m.chat.id]
+    bot.reply_to(m,"\n".join(uc) if uc else "ما عندك قضايا")
+
+@bot.message_handler(commands=['clear'])
+def cl(m): watched_users[m.chat.id]=[]; save(); bot.reply_to(m,"✅ مسحت الكل")
+
+@bot.message_handler(content_types=['photo','document'])
+def ph(m):
+    bot.send_message(m.chat.id,"⏳ دا اقرا الصورة...")
     try:
-        case_id = m.text.split()[1]
-        cases[case_id] = {"chat_id": m.chat.id}
-        save()
-        bot.reply_to(m, f"✅ ضفت القضية {case_id}")
-    except:
-        bot.reply_to(m, "استخدم
+        fid=m.photo[-1].file_id if m.content_type=='photo' else m.document.file_id
+        url=f"https://api.telegram.org/file/bot{TOKEN}/{bot.get_file(fid).file_path}"
+        data=requests.get(url).content
+        r=requests.post("https://api.ocr.space/parse/image",data={'apikey':'K87899142388957','language':'eng','OCREngine':2},files={'file':('img.jpg',data,'image/jpeg')},timeout=30)
+        text=r.json()['ParsedResults'][0]['ParsedText']
+        k,detail=extract_ban(text)
+        bot.reply_to(m,f"{detail}\n\nالنص: {text[:300]}\n\n{BANINFO}")
+    except Exception as e: bot.reply_to(m,f"❌ {e}")
+
+def run_bot():
+    while True:
+        try: bot.infinity_polling()
+        except: continue
+
+if __name__=="__main__":
+    Thread(target=run_flask).start()
+    run_bot()
