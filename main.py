@@ -1,90 +1,137 @@
-import os
+import sys, subprocess, os, json, re, requests, io
+from datetime import datetime
 from flask import Flask
 from threading import Thread
-import telebot
 
-TOKEN = os.getenv("BOT_TOKEN")
-bot = telebot.TeleBot(TOKEN)
+try:
+    from PIL import Image, ImageOps, ImageEnhance
+except ImportError:
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "Pillow"])
+    from PIL import Image, ImageOps, ImageEnhance
+try:
+    import telebot
+except ImportError:
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "pyTelegramBotAPI"])
+    import telebot
+from telebot.types import BotCommand
+
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+if not BOT_TOKEN:
+    BOT_TOKEN = "حط توكنك هنا"
+
+bot = telebot.TeleBot(BOT_TOKEN, skip_pending=True)
 app = Flask(__name__)
-
-users = []
-cases = []
 
 @app.route('/')
 def home():
-    return "Bot is running"
+    return "Bot V8 is Running 24/7"
 
 def run_flask():
     app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 10000)))
 
-@bot.message_handler(commands=['start'])
-def start(m):
-    bot.reply_to(m, "مرحبا بك ببوت محمد صباح العظيم\nالبوت شغال 24 ساعة\n\n/baninfo\n/pending\n/ipbypass")
+try:
+    bot.set_my_commands([
+        BotCommand("start", "❤️ تشغيل البوت"),
+        BotCommand("baninfo", "📋 انواع الباند بالتفصيل"),
+        BotCommand("ipbypass", "📱 فك حظر IP للاندرويد"),
+        BotCommand("pending", "📝 كليشة فك الطعن المعلق"),
+        BotCommand("verifytip", "✅ طريقة التوثيق المجاني MAX"),
+        BotCommand("list", "عرض اليوزرات"),
+        BotCommand("add", "اضافة يوزر"),
+        BotCommand("remove", "حذف يوزر"),
+        BotCommand("check", "فحص يوزر"),
+        BotCommand("addcase", "اضافة قضية"),
+        BotCommand("checkcase", "فحص القضايا"),
+        BotCommand("listcase", "عرض كل القضايا"),
+        BotCommand("clear", "مسح الكل"),
+    ])
+except:
+    pass
 
-@bot.message_handler(commands=['baninfo'])
-def baninfo(m):
-    txt = (
-        "انواع الباند بالتفصيل:\n\n"
-        "1- 24h Ban : حظر 24 ساعة\n"
-        "2- 7 Days Ban : حظر اسبوع سبام\n"
-        "3- 30 Days Ban : حظر شهر\n"
-        "4- Shadow Ban : نزول مشاهدات 80%\n"
-        "5- IP Ban : حظر الايبي ما تكدر تسوي حساب جديد\n"
-        "6- Permanent Ban : باند دائم\n"
-        "7- Age Ban : حظر عمر\n"
-        "8- Pending Appeal : الطعن معلق\n"
-    )
-    bot.reply_to(m, txt)
-
-@bot.message_handler(commands=['pending'])
-def pending(m):
-    txt = (
-        "الكليشة الانكلش الاصلية:\n\n"
-        "Hello TikTok Support Team,\n"
-        "My account @[username] has been incorrectly banned. I have not violated any community guidelines. I am a real person and my content is original.\n"
-        "Please review my account again manually.\n"
-        "Account: @[username]\n"
-        "Thank you"
-    )
-    bot.reply_to(m, txt)
-
-@bot.message_handler(commands=['ipbypass'])
-def ipbypass(m):
-    bot.reply_to(m, "فك حظر IP: وضع طيران 10 ثواني + DNS 1.1.1.1 + VPN امريكي + مسح بيانات تيك توك")
-
-@bot.message_handler(commands=['list'])
-def list_u(m):
-    bot.reply_to(m, "\n".join(users) if users else "فارغة")
-
-@bot.message_handler(commands=['add'])
-def add_u(m):
+FILE = "watched_cases.json"
+watched_users, cases = {}, {}
+if os.path.exists(FILE):
     try:
-        users.append(m.text.split()[1])
-        bot.reply_to(m, "تم")
-    except:
-        bot.reply_to(m, "استخدم /add @username")
+        with open(FILE, "r", encoding="utf-8") as f:
+            j = json.load(f)
+            watched_users = {int(k): v for k, v in j.get("users", {}).items()}
+            cases = j.get("cases", {})
+    except: pass
 
-@bot.message_handler(commands=['remove'])
-def rem_u(m):
+def save():
+    with open(FILE, "w", encoding="utf-8") as f:
+        json.dump({"users": watched_users, "cases": cases}, f, ensure_ascii=False, indent=2)
+
+def enhance_image(b):
     try:
-        users.remove(m.text.split()[1])
-        bot.reply_to(m, "تم الحذف")
-    except:
-        bot.reply_to(m, "مو موجود")
+        img = Image.open(io.BytesIO(b)).convert('L')
+        w,h = img.size
+        if w < 1200: img = img.resize((w*4, h*4), Image.LANCZOS)
+        img = ImageOps.autocontrast(img, cutoff=1)
+        img = ImageEnhance.Sharpness(img).enhance(3.0)
+        img = ImageEnhance.Contrast(img).enhance(2.5)
+        buf = io.BytesIO(); img.save(buf, format='JPEG', quality=100)
+        return buf.getvalue()
+    except: return b
 
-@bot.message_handler(commands=['clear'])
-def clear_u(m):
-    users.clear()
-    cases.clear()
-    bot.reply_to(m, "تم مسح الكل")
+def ocr_online(b):
+    enh = enhance_image(b)
+    for data in [enh, b]:
+        for lang in ['eng','ara+eng','ara']:
+            try:
+                r = requests.post("https://api.ocr.space/parse/image",
+                    data={'apikey':'K87899142388957','language':lang,'OCREngine':2,'scale':True},
+                    files={'file':('img.jpg', data, 'image/jpeg')}, timeout=50)
+                j = r.json()
+                if j.get('ParsedResults'):
+                    t = j['ParsedResults'][0].get('ParsedText','')
+                    if len(t.strip())>3: return t
+            except: continue
+    return ""
 
-def run_bot():
-    while True:
-        try:
-            bot.infinity_polling()
-        except:
-            continue
+BANINFO_TEXT = """📋🔥 انواع الباند بالتفصيل ونسب الرجوع حبيبي 😎👇
 
-if __name__ == "__main__":
-    Thread(target=run_flask).start()
-    Thread(target=run_bot).start()
+━━━━━━━━━━━━━━━
+1️⃣ فيك اكاونت - نزاهة الحساب 🎭 3X
+💪 القوة: 3X
+📈 نسبة الرجوع: 80% اذا مابي انتهاك ✅
+━━━━━━━━━━━━━━━
+2️⃣ نيو اكاونت - نزاهة الحساب 2X 🆕 2X
+💪 القوة: 2X
+📈 نسبة الرجوع: 75% يرجع اذا مابي اي انتهاك ⚠️
+━━━━━━━━━━━━━━━
+3️⃣ الاباحي 🔞
+💪 القوة: 10X 💀
+📈 نسبة الرجوع: 10% فقط 😭
+━━━━━━━━━━━━━━━
+4️⃣ الفراود - غسيل اموال 💸 3X
+💪 القوة: 3X
+📈 نسبة الرجوع: 80% يرجع اذا مابي انتهاك ✅💰
+━━━━━━━━━━━━━━━
+5️⃣ اطفال - اقل من 13 سنة 👶
+💪 القوة: 100X 💀💀
+📈 نسبة الرجوع: 1% - صعب فكه حاليااا
+━━━━━━━━━━━━━━━
+6️⃣ السبام وكم اكس 📵
+💪 القوة: 1X-4X
+📈 نسبة الرجوع: 80% اسهل باند ✅
+━━━━━━━━━━━━━━━
+💡 دز صورة تعطيل هسه وراح اكلك نوع باندك ونسبة رجوعك 😎
+"""
+
+def extract_ban(text):
+    u="غير معروف"; d="August 8, 2026"; k="integrity_fake"
+    mm=re.search(r'access to ([a-zA-Z0-9._]+)', text, re.I)
+    if mm: u=mm.group(1)
+    else:
+        mm=re.search(r'o5\.d9|[a-z0-9][a-z0-9._]{2,29}', text.lower())
+        if mm: u=mm.group(0)
+    u=u.lower().replace("@","").strip()
+    low=text.lower()
+    if "under 13" in low: k="under13"
+    elif "avoiding" in low or "bypass" in low or "creating another" in low: k="integrity_new"
+    elif "sexual" in low or "nudity" in low: k="sexual"
+    elif "fraud" in low: k="fraud"
+    elif "spam" in low: k="spam"
+    else: k="integrity_fake"
+    return u,d,k
