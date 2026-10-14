@@ -29,7 +29,6 @@ try:
     ])
 except: pass
 
-# === الكليشات الي انت طلبتها بالحرف ===
 PENDING_CLICHE = """📝🔥 كليشة فك الطعن المعلق - انسخها حبيبي 😎
 
 Hello Instagram Support Team,
@@ -84,67 +83,4 @@ BANINFO_CLICHE = """🔥📋 انواع الباند:
 VERIFY_CLICHE = """✅🔥 طريقة التوثيق المجاني MAX حبيبي 😎
 
 1️⃣ سوي حساب انستا جديد بنفس ايميل حسابك المعطل
-2️⃣ روح الاعدادات → Meta Verified
-3️⃣ اختار خطة MAX المجانية 7 ايام
-4️⃣ وثق بهوية حقيقية
-5️⃣ انستا راح يرجع حسابك المعطل اوتوماتيك لان نفس الايميل
-
-❤️ مجربة وترجع 90%"""
-
-@bot.message_handler(commands=['start'])
-def start(m):
-    bot.reply_to(m, f"❤️ هلا رضي البوت الاسطوري V10 شغال\n\n{BANINFO_CLICHE}\n\nالقائمة: /baninfo /pending /ipbypass /verifytip")
-
-@bot.message_handler(commands=['baninfo'])
-def baninfo(m): bot.reply_to(m, BANINFO_CLICHE)
-
-@bot.message_handler(commands=['pending'])
-def pending(m): bot.reply_to(m, PENDING_CLICHE)
-
-@bot.message_handler(commands=['ipbypass'])
-def ipbypass(m): bot.reply_to(m, IPBYPASS_CLICHE)
-
-@bot.message_handler(commands=['verifytip'])
-def verifytip(m): bot.reply_to(m, VERIFY_CLICHE)
-
-@bot.message_handler(commands=['list','add','remove','check','addcase','checkcase','listcase','clear'])
-def others(m):
-    txt=m.text
-    if txt.startswith('/list'): bot.reply_to(m, "📋 القائمة فارغة - /add @o5.d9")
-    elif txt.startswith('/add'): bot.reply_to(m, "✅ ضفت اليوزر")
-    elif txt.startswith('/remove'): bot.reply_to(m, "✅ حذفت اليوزر")
-    elif txt.startswith('/check'):
-        try:
-            u=txt.split()[1].replace("@","")
-            bot.reply_to(m, f"🔴 @{u} لسه معطل - استخدم /pending")
-        except: bot.reply_to(m, "استخدم: /check @يوزر")
-    elif txt.startswith('/addcase'): bot.reply_to(m, "✅ ضفت القضية")
-    elif txt.startswith('/checkcase'): bot.reply_to(m, "🔍 جاري فحص القضايا...")
-    elif txt.startswith('/listcase'): bot.reply_to(m, "📋 ما عندك قضايا حاليا")
-    elif txt.startswith('/clear'): bot.reply_to(m, "✅ مسحت الكل")
-
-@bot.message_handler(content_types=['photo','document'])
-def photo(m):
-    bot.send_message(m.chat.id, "⏳ دا اقرا صورة التعطيل... 🔍")
-    try:
-        fid=m.photo[-1].file_id if m.content_type=='photo' else m.document.file_id
-        url=f"https://api.telegram.org/file/bot{TOKEN}/{bot.get_file(fid).file_path}"
-        data=requests.get(url).content
-        r=requests.post("https://api.ocr.space/parse/image",data={'apikey':'K87899142388957','language':'eng','OCREngine':2},files={'file':('img.jpg',data,'image/jpeg')},timeout=30)
-        text=r.json()['ParsedResults'][0]['ParsedText']
-        low=text.lower()
-        if "new accounts" in low or "creating another" in low or "avoiding" in low:
-            res="🔵 نيو اكاونت 2X - 75%\n\nاستخدم كليشة /pending"
-        else:
-            res="🟣 فيك اكاونت 3X - 80%\n\nاستخدم كليشة /pending + سيلفي"
-        bot.reply_to(m, f"{res}\n\nالنص من الصورة: {text[:300]}")
-    except Exception as e: bot.reply_to(m, f"❌ {e}")
-
-def run_bot():
-    while True:
-        try: bot.infinity_polling()
-        except: continue
-
-if __name__=="__main__":
-    Thread(target=run_flask).start()
-    run_bot()
+2️⃣
